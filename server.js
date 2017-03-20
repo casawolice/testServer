@@ -1,6 +1,7 @@
 let fs = require("fs"),
-    http = require("http");
-url = require("url");
+    http = require("http"),
+    url = require("url"),
+    path =require("path");
 
 function onRequest(request, response) {
     console.log("Request received.");
@@ -25,28 +26,28 @@ function onRequest(request, response) {
 function handleReq(request) {
     if (request.url !== "/favicon.ico") {
         let reqUrl = url.parse(request.url),
-            path = (url.format(reqUrl.path)).substr(1),
-            jsonName = path.replace(/\.htm$/, ".json"),
-            jsonPath = `./json/${jsonName}`,
+            urlpath = (url.format(reqUrl.path)).substr(1),
+            jsonName = urlpath.replace(/\.htm$/, ".json"),
+            jsonPath = path.resolve(__dirname,`./json/${jsonName}`),
             json = require('./json/error.json');
 
-        if (path != "") {
-            try {
+        if (jsonPath != "" ) 
+           {   
+               
+               let isExists=fs.existsSync(jsonPath);
+               
+               if(!isExists)
+               {
+                   jsonName=jsonName.replace(/\//g,"-");
+                   jsonPath= path.resolve(__dirname,`./json/${jsonName}`);
+                   isExists=fs.existsSync(jsonPath);
+               }
+               if(isExists)
+               {
                 json = require(jsonPath);
-            } catch (err) {
-                jsonName=jsonName.replace(/\//g, "-");
-                jsonPath = `./json/${jsonName}`;
-                try{
-                    json = require(jsonPath);
-                }
-                catch(errFinal)
-                {
-                 console.log(errFinal);
-                }
-            }
-
-        }
-
+               }
+           }
+          
         return JSON.stringify(json);
     }
     return null;
